@@ -3,39 +3,63 @@ import FriendCard from "./components/FriendCard";
 import Wrapper from "./components/Wrapper";
 import Title from "./components/Title";
 import friends from "./friends.json";
+import NavBar from "./components/NavBar";
 
 class App extends Component {
-  // Setting this.state.friends to the friends json array
   state = {
-    selected: false
+    characters: friends,
+    selected: [],
+    score: 0,
+    gameOver: false
   };
 
-  handleSelected = id => {
-    // Filter this.state.friends for friends with an id not equal to the id being removed
-    const selected = this.state.friends.filter(friend => friend.id !== id);
+  componentDidMount() {
+    this.setState({ characters: this.shuffleCharacters() });
+  }
 
-    //set the state to clicked then shuffle the deck to give each card a new location.
-    //something goes here to do that.
-    //.shuffle method? something like that?
-
-    // shuffle = array => {
-    //   for (let i = array.length - 1; i > 0; i--) {
-    //     const j = Math.floor(Math.random() * (i + 1));
-    //     [array[i], array[j]] = [array[j], array[i]];
-    //   }
-    // };
-
-    this.setState({ selected });
+  shuffleCharacters = () => {
+    const characters = this.state.characters;
+    for (const index of characters.keys()) {
+      const randIndex = Math.floor(Math.random() * characters.length);
+      const temp = characters[index];
+      characters[index] = characters[randIndex];
+      characters[randIndex] = temp;
+    }
+    return characters;
   };
 
-  // Map over this.state.friends and render a FriendCard component for each friend object
+  handleSelection = id => {
+    if (!this.state.gameOver) {
+      this.updateScore(id);
+    }
+  };
+
+  updateScore = id => {
+    const selected = this.state.selected;
+
+    if (selected.includes(id)) {
+      this.setState({ gameOver: true });
+    } else {
+      this.shuffleCharacters();
+      this.setState(prevState => ({
+        score: prevState.score + 1,
+        selected: [...prevState.selected, id]
+      }));
+    }
+  };
+
   render() {
     return (
       <Wrapper>
+        <NavBar
+          selected={this.state.selected}
+          score={this.state.score}
+          gameOver={this.state.gameOver}
+        />
         <Title>The Office Memory Game</Title>
-        {this.state.selected.map(friend => (
+        {this.state.characters.map(friend => (
           <FriendCard
-            handleSelected={this.handleSelected}
+            handleSelection={this.handleSelection}
             id={friend.id}
             key={friend.id}
             name={friend.name}
